@@ -1,0 +1,21 @@
+---
+ - hosts: all
+   vars:
+     - jimm_password: '$6$vfXjnhY6$MCqVymLR90aCQPPFJgv8J74Bsb69usR3eBaOQEh8Q59RuzbWZGVZgpal.0WbVIPr07L2QxhjL4nGYAwLmr7M/.'
+   gather_facts: no
+   remote_user: ec2-user
+   become: true
+tasks:
+- name: Add a new user named jimm
+     user:
+          name: jimm
+          shell: /bin/bash
+          password: "{{ jimm_password }}"
+- name: Add jimm user to the sudoers
+     copy:
+          dest: "/etc/sudoers.d/jimm"
+          content: "jimm  ALL=(ALL)  NOPASSWD: ALL"
+- name: Deploy SSH Key
+     authorized_key: user=jimm
+                     key="{{ lookup('file', '/home/jimm/.ssh/authorized_keys') }}"
+                     state=present

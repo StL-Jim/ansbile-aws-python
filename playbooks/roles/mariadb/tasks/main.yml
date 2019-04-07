@@ -1,0 +1,63 @@
+---
+# Setup MariaDB repo file
+# Install GPG key
+# Install MariaDB and Python mysql client/libs
+# Create configs
+# Delete old long files
+# Setup data dir
+# Start service
+# Initial securing of MySQL/MariaDB
+# Cleanup
+# Write root .my.cnf
+
+- name: copy the repo file
+  copy: src=MariaDB.repo dest=/etc/yum.repos.d/MariaDB.repo
+
+- name: install maria rpm-gpg-key
+  copy: src=RPM-GPG-KEY-MariaDB dest=/etc/pki/rpm-gpg/RPM-GPG-KEY-MariaDB
+
+- name: install mariadb
+  apt: pkg=mariadb-server state=present
+  register: installed_mariadb
+
+- name: install python-mysqldb
+  apt: pkg=python-mysqldb state=present
+
+- name: stop mariadb
+  service: name=mysql state=stopped
+
+- name: write my.cnf
+  template: "src=my.cnf.j2 dest={{ mariadb_config }} owner=root group=root mode=0644"
+
+- name: remove old log files
+  file: "path={{ item }} state=absent"
+  with_items:
+    - /var/log/mysql.err
+    - /var/log/mysql.log
+
+- name: create new data dir
+  command: "{{ mariadb_install_db_bin }} --basedir={{ mariadb_base_dir }} --datadir={{ mariadb_data_dir }} --user=mysql"
+  when: mariadb_data_dir != '/var/lib/mysql'
+
+- name: start mariadb
+  service: name=mysql enabled=yes state=started
+  register: started_mariadb
+
+- name: temporarily remove root/.my.cnf
+  file: path=/root/.my.cnf state=absent
+  when: installed_mariadb|changed
+
+- name: prepare secure mariadb
+  template: src=mariadb_init.sql.j2 dest=/tmp/mariadb_init.sql owner=root group=root mode=0600
+  when: installed_mariadb|changed
+
+- name: secure mariadb
+  shell: mysql mysql < /tmp/mariadb_init.sql
+  when: installed_mariadb|changed
+
+- name: cleanup secure mariadb
+  file: path=/tmp/mariadb_init.sql state=absent
+  when: installed_mariadb|changed
+
+- name: write root/.my.cnf
+  template: src=root_my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
