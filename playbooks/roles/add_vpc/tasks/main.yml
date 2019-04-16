@@ -1,0 +1,91 @@
+---
+- name: Creating an AWS VPC inside {{ region }} region
+  ec2_vpc_net:
+    name: "{{ vpc_name }}-{{ vpc_cird_default }}"
+    region: "{{ region }}"
+    state:  present
+    cidr_block: "{{ vpc_cidr_block }}"
+    tags: 
+      # Name : "{{ vpc_name }}-vpc"
+      Environment : "{{ ENVIRONMENT }}"
+  register: vpc_result
+
+- name: Associate a subnet to the VPC
+  ec2_vpc_subnet:
+   state: present
+   vpc_id: "{{ vpc_result.vpc.id }}" 
+   region: "{{ region }}"
+   az: "{{ item.az }}"
+   cidr: "{{ item.cidr }}"
+   map_public: yes
+   resource_tags:
+     "{{ item.resource_tags }}" #   Name: "{{ vpc_name }}-{{ private_az_1 }}-private-subnet-1"
+  with_items: "{{ vpc_subnets }}"
+  register: subnet_result
+
+#- name: Associate a subnet to the VPC
+#  ec2_vpc_subnet:
+#   state: present
+#   vpc_id: "{{ vpc_result.vpc.id }}" 
+#   region: "{{ region }}"
+#   cidr: "{{ private_cidr_1 }}"
+#   map_public: yes
+#   resource_tags:
+#     Name: "{{ vpc_name }}-{{ private_az_1 }}-private-subnet-1"
+#  register: subnet_result
+
+- name: create IGW "{{ vpc_name }}-igw" in {{ region }}
+  ec2_vpc_igw:
+   vpc_id: "{{ vpc_result.vpc.id }}"
+   region: "{{ region }}"
+   state: "present"
+   tags:
+     Name: "{{ vpc_name }}-igw"
+  register: igw_result
+
+# Kinda stuck here, I can't figure out how to get The Public subnets and create routes for them
+# could use ec2_vpc_subnet_facts to get the info and then parse that.
+# Could use lookup but can you use a loop?
+- name: Set up Public Subnets Route Table
+  ec2_vpc_route_table:
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    region: "{{ region }}"
+    state: present
+    tags:
+      Name: "Public-RT-for-{{ vpc_name }}-vpc"
+    subnets:
+      - '172.16.110.0/24'
+      - '172.16.120.0/24'
+      - '172.16.130.0/24'
+      # "{{ vpc_result.vpc.subnets | get_public_subnets_ids('Type','Public') }}"
+      # "{{ vpc_subnets.subnets | get_public_subnets_ids('Type','Public') }}"
+      # "{{ subnet_result.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw_result.gateway_id }}"
+  register: public_rt
+
+# Still wresting with recording what I've done into a file of some sorts
+# - name: "Create {{ vpc_name }}.yml file inside the vpc_info directory"
+#   lineinfile: 
+#     dest: "vpc_info/{{ vpc_name }}.yml"
+#     line: "---"
+#     create: yes
+# - name: "Write vpc info to {{ vpc_name }}.yml file inside the vpc_info directory"
+#   lineinfile:
+#     dest: "vpc_info/{{ vpc_name }}.yml"
+#     regexp: "^{{ item.regexp | upper }}"
+#     line: "{{ item.regexp | upper }}: {{ '\"' + item.line + '\"' }}"
+#   with_items:
+#     - { regexp: 'vpc_id', line: '{{ vpc_result.vpc.id }}' }
+#     - { regexp: 'igw', line: '{{ igw_result.gateway_id }}' }
+#     - { regexp: 'route_table_id', line: '{{ public_rt.route_table.id }}' }
+
+# - name: "Write public and private subnets ids to {{ vpc_name }}.yml file inside the vpc_info directory"
+#   lineinfile:
+#     dest: "vpc_info/{{ vpc_name }}.yml"
+#     regexp: "^{{ item.resource_tags.Alias | upper }}"
+#     line: "{{ item.resource_tags.Alias | upper }}: {{ '\"' + item.id + '\"' }}"
+#   with_items: "{{ vpc.subnets }}"
+  
+# - include_vars: "vpc_info/{{ vpc_name }}.yml"

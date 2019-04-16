@@ -1,0 +1,6 @@
+---
+   - name: Deploy VPC instances.
+     hosts: localhost
+     become: no
+     roles:
+       - add_vpc

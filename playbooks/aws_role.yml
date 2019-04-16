@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no   
+  roles:
+    - add_vpc
+    - new_ec2_inst
+    - ec2sg
+    - add_elb
+    - rds
+

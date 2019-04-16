@@ -1,0 +1,43 @@
+---
+ENVIRONMENT: "JimDev"
+# Variables for VPC
+vpc_name: "ue2_test"
+region: "us-east-2"
+vpc_cidr_block: "172.16.0.0/16"
+vpc_cird_default: "172.16"
+private_cidr_1: "{{ vpc_cird_default }}.10.0/24"
+private_az_1: "{{ region }}a"
+private_cidr_2: "{{ vpc_cird_default }}.20.0/24"
+private_az_2: "{{ region }}b"
+private_cidr_3: "{{ vpc_cird_default }}.30.0/24"
+private_az_3: "{{ region }}c"
+public_cidr_1: "{{ vpc_cird_default }}.110.0/24"
+public_az_1: "{{ region }}a"
+public_cidr_2: "{{ vpc_cird_default }}.120.0/24"
+public_az_2: "{{ region }}b"
+public_cidr_3: "{{ vpc_cird_default }}.130.0/24"
+public_az_3: "{{ region }}c"
+
+# Subnets definations for VPC
+vpc_subnets:
+  - cidr: "{{ public_cidr_1 }}" # Public Subnet-1
+    az: "{{ public_az_1 }}"
+    resource_tags: { "Name":"{{ vpc_name }}-{{ public_az_1 }}-public_subnet-1", "Type":"Public", "Alias":"Public_Subnet_1" }
+  - cidr: "{{ public_cidr_2 }}" # Public Subnet-2
+    az: "{{ public_az_2 }}"
+    resource_tags: { "Name":"{{ vpc_name }}-{{ public_az_2 }}-public-subnet-2", "Type":"Public", "Alias":"Public_Subnet_2" }
+  - cidr: "{{ public_cidr_3 }}" # Public Subnet-3
+    az: "{{ public_az_3 }}"
+    resource_tags: { "Name":"{{ vpc_name }}-{{ public_az_3 }}-public-subnet-3", "Type":"Public", "Alias":"Public_Subnet_3" }
+  - cidr: "{{ private_cidr_1 }}" # Private Subnet-1
+    az: "{{ private_az_1 }}"
+    resource_tags: { "Name":"{{ vpc_name }}-{{ private_az_1 }}-private-subnet-1", "Type":"Private", "Alias":"Private_Subnet_1" }
+  - cidr: "{{ private_cidr_2 }}" # Private Subnet-2
+    az: "{{ private_az_2 }}"
+    resource_tags: { "Name":"{{ vpc_name }}-{{ private_az_2 }}-private-subnet-2", "Type":"Private", "Alias":"Private_Subnet_2" }
+  - cidr: "{{ private_cidr_3 }}" # Private Subnet-3
+    az: "{{ private_az_3 }}"
+    resource_tags: { "Name":"{{ vpc_name }}-{{ private_az_3 }}-private-subnet-3", "Type":"Private", "Alias":"Private_Subnet_3" }
+
+# Variables for IGW
+igw_name: "Test Traffic IGW"
