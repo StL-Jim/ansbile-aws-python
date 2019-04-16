@@ -54,6 +54,7 @@
     tags:
       Name: "Public-RT-for-{{ vpc_name }}-vpc"
     subnets:
+      # Arg, ittering is still a problem for me, I should be able to 'pull this' from a regex
       - '172.16.110.0/24'
       - '172.16.120.0/24'
       - '172.16.130.0/24'
@@ -64,6 +65,30 @@
       - dest: 0.0.0.0/0
         gateway_id: "{{ igw_result.gateway_id }}"
   register: public_rt
+
+# Throw in creating a security group 
+- name: Create Security Group
+  ec2_group:
+    name: Web SSH DMZ
+    description: DMZ Security Group
+    vpc_id: "{{ vpc_result.vpc.id }}"
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        ports:
+        - 443
+        - 80
+        - 22
+        cidr_ip: 0.0.0.0/0
+      # - proto: tcp
+      #   ports:
+      #   - 80
+      #   cidr_ip: 0.0.0.0/0
+      # - proto: tcp
+      #   ports:
+      #   - 22
+      #   cidr_ip: 0.0.0.0/0
+  register: security_group
 
 # Still wresting with recording what I've done into a file of some sorts
 # - name: "Create {{ vpc_name }}.yml file inside the vpc_info directory"
