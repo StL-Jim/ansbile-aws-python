@@ -1,0 +1,33 @@
+---
+
+- include_vars: "defaults/main.yml"
+  tags: destroy
+
+- name: Ensure python is installed so we can use ec2_facts
+  apt:
+    pkg=python
+    state=latest
+  tags: destroy
+
+- name: Get the facts about our instance
+  action: ec2_facts
+  register: ec2
+  tags: destroy
+
+- debug: var=ec2
+  tags: destroy
+
+- name: Terminate single instance
+  local_action:
+     module: ec2
+     state: absent
+     region: "{{ ansible_role_ec2.region }}"
+     instance_ids: "{{ ansible_ec2_instance_id }}"
+  tags: destroy
+
+- name: Remove the entry from the hosts file
+  local_action: lineinfile
+                dest='./ansible/hosts'
+                regexp='^{{ ansible_ec2_public_ipv4 }}'
+                state=absent
+  tags: destroy

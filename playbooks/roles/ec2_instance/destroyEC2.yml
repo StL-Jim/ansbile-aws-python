@@ -1,0 +1,9 @@
+---
+# Verify you're destrying the right EC2 instance.
+
+- hosts: testHosts
+  tags: destroy
+
+  tasks:
+  # example - ansible-playbook -l all main.yml -i path_to_my_hosts/ansible_hosts --tags destroy
+  - include: tasks/destroy_ec2.yml

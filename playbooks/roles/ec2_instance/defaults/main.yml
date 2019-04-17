@@ -1,0 +1,32 @@
+---
+
+# some defaults for an ansible-role-ec2
+environment_name: 'env-name'
+enviroment_prefix: 'prefix'
+
+aws_volumes:
+  - device_name: /dev/sda1
+    volume_type: gp2
+
+extra_vars:
+
+
+site:
+  name: demo
+  environment: development
+
+ansible_role_ec2:
+  instance_type: t2.nano
+  # security_group: "{{ site.environment }}-{{ site.name }}"
+  security_group: "securityGroup_ssh_in_only"
+  image: ami-0b500ef59d8335eee # Redhat, 10GB, (us-east-2c)
+  #image: ami-ba4ea4da # amazon linux (us-west-2)
+  image_user: 309956199498 # not sure about this one
+  root_device: "{{ aws_volumes.device_name }}"
+  block_device: "{{ aws_volumes.device_name }}"
+  subnet_id: subnet-8e8e50c2
+  region: us-east-2c
+    image_user: ec2-user
+    keypair: jimm_aws_ec2
+  private_key: ~/.ssh/jimm_aws_ec2.pem
+  count: 1

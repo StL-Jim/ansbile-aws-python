@@ -1,0 +1,71 @@
+---
+- name: Get my IP addr -- Kinda cheese, but it's a test
+      uri:
+        url: http://checkip.amazonaws.com/
+        return_content: yes
+      register: my_ip
+
+- name: Create simple security group
+      ec2_group:
+        name: "{{ elb_security_group_name }}"
+        description: A security group for my current IP
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: "{{ my_ip.content | replace('\n', '') }}/32"
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: "{{ my_ip.content | replace('\n', '') }}/32"
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: "{{ my_ip.content | replace('\n', '') }}/32"
+        rules_egress:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+      register: webservers_group      
+
+- name: Ensure load balancer exists
+  ec2_elb_lb:
+    name: "{{ elb_name }}"
+    security_group_names: "{{ elb_security_group_name }}"
+    state: present
+    region: "{{ region }}"
+    subnets: "{{ elb_subnet_id }}"
+    purge_subnets: "{{ elb_purge_subnets }}"
+    cross_az_load_balancing: "{{ elb_cross_az_load_balancing }}"
+    connection_draining_timeout: "{{ elb_connection_draining_timeout }}"
+    listeners: "{{ elb_listeners }}"
+    stickiness: "{{ elb_stickiness }}"
+    health_check: "{{ elb_health_check }}"
+  register: elb
+
+- name: Adding EC2 instance(s) to the ELB
+  ec2_elb:
+    region: "{{ region }}"
+    ec2_elbs: "{{ elb_name }}"
+    instance_id: "{{ item }}"
+    wait: yes
+    state: present
+  with_items: "{{ instances_id_list }}"
+  when: not(instances_id_list is undefined or instances_id_list is none or instances_id_list | trim == '')
+
+- name: "Write ELB url to {{ vpc_name }}.yml file inside the secret_vars directory"
+  lineinfile:
+    dest: "secret_vars/{{ vpc_name }}.yml"
+    regexp: "^ELB_URL"
+    line: "ELB_URL: {{ '\"' + elb.elb.dns_name + '\"' }}"
+  

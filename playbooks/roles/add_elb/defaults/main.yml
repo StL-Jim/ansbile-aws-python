@@ -1,0 +1,31 @@
+---
+ELB_SUBNET_ID: []
+ELB_LISTENERS:
+  - protocol: http
+    load_balancer_port: 80
+    instance_protocol: http
+    instance_port: 80
+  - protocol: http
+    load_balancer_port: 443
+    instance_protocol: https
+    instance_port: 443
+# Use inside the tasks
+region: "us-east-2"
+elb_name: "elb-test"
+elb_subnet_id: "{{ ELB_SUBNET_ID }}"
+elb_purge_subnets: no
+elb_cross_az_load_balancing: no
+elb_connection_draining_timeout: 120
+elb_security_group_name: "80_22_443_test"
+elb_listeners: "{{ ELB_LISTENERS }}"
+elb_stickiness:
+  type: "loadbalancer"
+  enabled: no
+  expiration: 150
+elb_health_check:
+  ping_protocol: "tcp"
+  ping_port: "80"
+  response_timeout: "5"
+  interval: "30"
+  unhealthy_threshold: "2"
+  healthy_threshold: "10"

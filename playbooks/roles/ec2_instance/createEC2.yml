@@ -1,0 +1,11 @@
+---
+# Basic playbook to creates an EC2 instance
+
+- hosts: testHosts
+  # connection: api/local?
+  gather_facts: True
+  tags: ec2_create
+
+  tasks:
+  # example - ansible-playbook -l all main.yml -i path_to_my_hosts/ansible_hosts --tags create
+  - include: tasks/create_ec2.yml
