@@ -1,0 +1,82 @@
+---
+# tasks file for mariuszczyz.centos-mysql
+
+- name: Include secret vars
+  include_vars: secret-vault.yml
+
+- name: Install MariaDB
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - mariadb-server
+    - mariadb
+    - MySQL-python
+
+- name: Deploy custom MariaDB configuration file
+  copy: 
+    src: mysql-server.cnf q
+    dest: /etc/my.cnf.d/server.cnf 
+    owner: root 
+    group: root 
+    mode: 0644
+  notify: restart mariadb
+
+- name: Start and enable MariaDB server
+  service: 
+    name: mariadb 
+    state: started 
+    enabled: yes
+
+# create root .my.cnf config file
+- name: Add .my.cnf
+  template: 
+    src: my.cnf.j2 
+    dest: /root/.my.cnf 
+    owner: root 
+    group: root 
+    mode: 0600
+
+- name: Set root Password
+  mysql_user: 
+    login_password: "{{ MYSQL_ROOT_PASSWORD }}"
+    check_implicit_admin: yes 
+    name: root 
+    host: "{{ item }}"
+    password: "{{ MYSQL_ROOT_PASSWORD }}"
+    state: present
+  with_items:
+    - localhost
+    - 127.0.0.1
+    - ::1
+
+- name: Reload privilege tables
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES
+  changed_when: False
+
+- name: Remove anonymous users
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User=''
+  changed_when: False
+
+- name: Disallow root login remotely
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+  changed_when: False
+
+- name: Remove test database and access to it
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DROP DATABASE IF EXISTS test
+    - DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%'
+  changed_when: False
+
+- name: Reload privilege tables
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES
+  changed_when: False

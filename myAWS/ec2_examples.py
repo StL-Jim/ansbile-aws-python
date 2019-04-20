@@ -17,7 +17,7 @@ response = ec2.describe_instances()
 # My primary instance = u'InstanceId': 'i-03831566db711066d',
 
 # Ha haaaa, now you have a list which is a ugly list that has dics in the list.  
-# Better to stick with json?
+# Better to stick with json or collecti9on.
 reservations = response.get("Reservations")
 
 for reservation in response['Reservations']:
@@ -40,15 +40,8 @@ for key, value in reservations.items():
     print key
     # print value
 
-# Be careful, do testing on a junk server
-pprint.pprint(client.stop_instances(InstanceIds=[instId]))
 
 
-'''
-Ok, a bit about stopping and starting instance(s)
-In [88]: len(name['Reservations'])
-Out[88]: 1
-'''
 
 
 

@@ -1,0 +1,4 @@
+---
+VPC_ID: "vpc-07b6ed6f53cfb5940"
+IGW: "igw-0d17fd5052c7c5b20"
+ROUTE_TABLE_ID: "rtb-08fae802c93a7cbe7"

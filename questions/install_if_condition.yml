@@ -1,0 +1,25 @@
+---
+- name: Install zlib and vim on all hosts if '/tmp/mario' exists
+  hosts: localhost
+  vars:
+    mario: /tmp/mario
+  tasks:
+    - name: Test if /tmp/mario exists
+      stat:
+        path: "{{ mario }}"
+      register: if_mario
+
+    - name: debug my if_dir var
+      # debug: if_dir.stdout
+      debug:
+        var: if_mario
+
+    - name: Install packages zlib and vim
+      yum:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+        - zlib
+        - vim
+      when: if_mario.stat.isdir is defined and if_mario.stat.isdir

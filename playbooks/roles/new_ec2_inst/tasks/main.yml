@@ -37,6 +37,8 @@
 - set_fact:
     instances_id_list: "{{ ec2.results | get_ec2_info('id') }}"
 
+
+## Stupid SELinux and virtualenvs!
 - name: Add the newly created EC2 instance(s) to the local host group (located at ./inventory/hosts)
   lineinfile:
     dest: "./inventory/hosts" 
