@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  vars:
+    package_list:
+    - 'zlib'
+    - 'vim'
+  tasks:
+    - name: Install zlib and vim if dir exists
+      become: yes
+      package:
+        name: "{{ package_list }}"
+        state: present
+      with_fileglob:
+        - '/tmp/mario'

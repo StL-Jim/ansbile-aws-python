@@ -1,0 +1,19 @@
+---
+- name: "Do some stuff and things"
+  hosts: localhost
+  become_method: sudo
+  become: root
+  gather_facts: true
+  vars:
+    package_list:
+      - 'curl'
+      - 'wget'
+      - 'net-tools'
+
+  tasks:
+    - name: "Install Something"
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ package_list }}"
+

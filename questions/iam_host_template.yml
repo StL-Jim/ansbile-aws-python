@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: write out foo
+      template:
+        src: foo.j2
+        dest: /tmp/file.conf
+        owner: jimm
+        group: jimm
+        mode: 0644
+
+
